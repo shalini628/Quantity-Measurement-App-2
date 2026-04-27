@@ -1,21 +1,23 @@
+// QualityMeasurementApp2.java
+
 enum LengthUnit {
     FEET(1.0),
     INCHES(1.0 / 12.0),
     YARDS(3.0),
     CENTIMETERS(0.0328084);
 
-    private final double factorToFeet;
+    private final double factor;
 
-    LengthUnit(double factorToFeet) {
-        this.factorToFeet = factorToFeet;
+    LengthUnit(double factor) {
+        this.factor = factor;
     }
 
     public double toFeet(double value) {
-        return value * factorToFeet;
+        return value * factor;
     }
 
-    public double fromFeet(double feetValue) {
-        return feetValue / factorToFeet;
+    public double fromFeet(double feet) {
+        return feet / factor;
     }
 }
 
@@ -31,9 +33,15 @@ class QuantityLength {
         this.unit = unit;
     }
 
+    // UC6 - default first operand unit
     public QuantityLength add(QuantityLength other) {
-        if (other == null) {
-            throw new IllegalArgumentException("Second operand cannot be null");
+        return add(other, this.unit);
+    }
+
+    // UC7 - explicit target unit
+    public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
+        if (other == null || targetUnit == null) {
+            throw new IllegalArgumentException("Invalid input");
         }
 
         double feet1 = this.unit.toFeet(this.value);
@@ -41,9 +49,9 @@ class QuantityLength {
 
         double sumFeet = feet1 + feet2;
 
-        double result = this.unit.fromFeet(sumFeet);
+        double result = targetUnit.fromFeet(sumFeet);
 
-        return new QuantityLength(result, this.unit);
+        return new QuantityLength(result, targetUnit);
     }
 
     @Override
@@ -53,13 +61,12 @@ class QuantityLength {
 }
 
 public class QualityMeasurementApp2 {
+
     public static void main(String[] args) {
 
         QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
         QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
 
-        QuantityLength result = q1.add(q2);
-
-        System.out.println(result);
+        System.out.println(q1.add(q2, LengthUnit.YARDS));
     }
 }

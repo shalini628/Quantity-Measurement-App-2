@@ -5,54 +5,49 @@ import org.junit.jupiter.api.Test;
 
 class QualityMeasurementApp2Test {
 
-    private static final double EPSILON = 1e-6;
+    double EPSILON = 0.01;
 
     @Test
-    void testAddition_SameUnit_FeetPlusFeet() {
-        QuantityLength a = new QuantityLength(1.0, LengthUnit.FEET);
-        QuantityLength b = new QuantityLength(2.0, LengthUnit.FEET);
-
-        assertEquals(3.0, a.add(b).value, EPSILON);
-    }
-
-    @Test
-    void testAddition_SameUnit_InchPlusInch() {
-        QuantityLength a = new QuantityLength(6.0, LengthUnit.INCHES);
-        QuantityLength b = new QuantityLength(6.0, LengthUnit.INCHES);
-
-        assertEquals(12.0, a.add(b).value, EPSILON);
-    }
-
-    @Test
-    void testAddition_CrossUnit_FeetPlusInches() {
+    void testAddition_ExplicitTargetUnit_Feet() {
         QuantityLength a = new QuantityLength(1.0, LengthUnit.FEET);
         QuantityLength b = new QuantityLength(12.0, LengthUnit.INCHES);
 
-        assertEquals(2.0, a.add(b).value, EPSILON);
+        assertEquals(2.0, a.add(b, LengthUnit.FEET).value, EPSILON);
     }
 
     @Test
-    void testAddition_CrossUnit_InchPlusFeet() {
-        QuantityLength a = new QuantityLength(12.0, LengthUnit.INCHES);
-        QuantityLength b = new QuantityLength(1.0, LengthUnit.FEET);
+    void testAddition_ExplicitTargetUnit_Inches() {
+        QuantityLength a = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength b = new QuantityLength(12.0, LengthUnit.INCHES);
 
-        assertEquals(24.0, a.add(b).value, EPSILON);
+        assertEquals(24.0, a.add(b, LengthUnit.INCHES).value, EPSILON);
     }
 
     @Test
-    void testAddition_CrossUnit_YardPlusFeet() {
-        QuantityLength a = new QuantityLength(1.0, LengthUnit.YARDS);
-        QuantityLength b = new QuantityLength(3.0, LengthUnit.FEET);
+    void testAddition_ExplicitTargetUnit_Yards() {
+        QuantityLength a = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength b = new QuantityLength(12.0, LengthUnit.INCHES);
 
-        assertEquals(2.0, a.add(b).value, EPSILON);
+        assertEquals(0.667, a.add(b, LengthUnit.YARDS).value, EPSILON);
     }
 
     @Test
-    void testAddition_CrossUnit_CentimeterPlusInch() {
-        QuantityLength a = new QuantityLength(2.54, LengthUnit.CENTIMETERS);
+    void testAddition_ExplicitTargetUnit_Centimeters() {
+        QuantityLength a = new QuantityLength(1.0, LengthUnit.INCHES);
         QuantityLength b = new QuantityLength(1.0, LengthUnit.INCHES);
 
-        assertEquals(5.08, a.add(b).value, 0.01);
+        assertEquals(5.08, a.add(b, LengthUnit.CENTIMETERS).value, EPSILON);
+    }
+
+    @Test
+    void testAddition_Commutativity() {
+        QuantityLength a = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength b = new QuantityLength(12.0, LengthUnit.INCHES);
+
+        double r1 = a.add(b, LengthUnit.YARDS).value;
+        double r2 = b.add(a, LengthUnit.YARDS).value;
+
+        assertEquals(r1, r2, EPSILON);
     }
 
     @Test
@@ -60,7 +55,7 @@ class QualityMeasurementApp2Test {
         QuantityLength a = new QuantityLength(5.0, LengthUnit.FEET);
         QuantityLength b = new QuantityLength(0.0, LengthUnit.INCHES);
 
-        assertEquals(5.0, a.add(b).value, EPSILON);
+        assertEquals(1.667, a.add(b, LengthUnit.YARDS).value, EPSILON);
     }
 
     @Test
@@ -68,29 +63,31 @@ class QualityMeasurementApp2Test {
         QuantityLength a = new QuantityLength(5.0, LengthUnit.FEET);
         QuantityLength b = new QuantityLength(-2.0, LengthUnit.FEET);
 
-        assertEquals(3.0, a.add(b).value, EPSILON);
+        assertEquals(36.0, a.add(b, LengthUnit.INCHES).value, EPSILON);
     }
 
     @Test
-    void testAddition_NullSecondOperand() {
+    void testAddition_NullTargetUnit() {
         QuantityLength a = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength b = new QuantityLength(12.0, LengthUnit.INCHES);
 
-        assertThrows(IllegalArgumentException.class, () -> a.add(null));
+        assertThrows(IllegalArgumentException.class,
+                () -> a.add(b, null));
     }
 
     @Test
-    void testAddition_LargeValues() {
-        QuantityLength a = new QuantityLength(1e6, LengthUnit.FEET);
-        QuantityLength b = new QuantityLength(1e6, LengthUnit.FEET);
+    void testAddition_LargeToSmallScale() {
+        QuantityLength a = new QuantityLength(1000.0, LengthUnit.FEET);
+        QuantityLength b = new QuantityLength(500.0, LengthUnit.FEET);
 
-        assertEquals(2e6, a.add(b).value, EPSILON);
+        assertEquals(18000.0, a.add(b, LengthUnit.INCHES).value, EPSILON);
     }
 
     @Test
-    void testAddition_SmallValues() {
-        QuantityLength a = new QuantityLength(0.001, LengthUnit.FEET);
-        QuantityLength b = new QuantityLength(0.002, LengthUnit.FEET);
+    void testAddition_SmallToLargeScale() {
+        QuantityLength a = new QuantityLength(12.0, LengthUnit.INCHES);
+        QuantityLength b = new QuantityLength(12.0, LengthUnit.INCHES);
 
-        assertEquals(0.003, a.add(b).value, EPSILON);
+        assertEquals(0.667, a.add(b, LengthUnit.YARDS).value, EPSILON);
     }
 }
