@@ -1,63 +1,65 @@
-import java.util.Scanner;
+enum LengthUnit {
+    FEET(1.0),
+    INCHES(1.0 / 12.0),
+    YARDS(3.0),
+    CENTIMETERS(0.0328084);
+
+    private final double factorToFeet;
+
+    LengthUnit(double factorToFeet) {
+        this.factorToFeet = factorToFeet;
+    }
+
+    public double toFeet(double value) {
+        return value * factorToFeet;
+    }
+
+    public double fromFeet(double feetValue) {
+        return feetValue / factorToFeet;
+    }
+}
+
+class QuantityLength {
+    double value;
+    LengthUnit unit;
+
+    public QuantityLength(double value, LengthUnit unit) {
+        if (unit == null || !Double.isFinite(value)) {
+            throw new IllegalArgumentException("Invalid input");
+        }
+        this.value = value;
+        this.unit = unit;
+    }
+
+    public QuantityLength add(QuantityLength other) {
+        if (other == null) {
+            throw new IllegalArgumentException("Second operand cannot be null");
+        }
+
+        double feet1 = this.unit.toFeet(this.value);
+        double feet2 = other.unit.toFeet(other.value);
+
+        double sumFeet = feet1 + feet2;
+
+        double result = this.unit.fromFeet(sumFeet);
+
+        return new QuantityLength(result, this.unit);
+    }
+
+    @Override
+    public String toString() {
+        return "Quantity(" + value + ", " + unit + ")";
+    }
+}
 
 public class QualityMeasurementApp2 {
-    static int m, n;
-    static int[][] grid;
-    static boolean[][] visited;
-
-    // DFS function
-    static void dfs(int row, int col) {
-
-        // Check boundaries
-        if (row < 0 || col < 0 || row >= m || col >= n) {
-            return;
-        }
-
-        // If water or already visited
-        if (grid[row][col] == 0 || visited[row][col]) {
-            return;
-        }
-
-        // Mark visited
-        visited[row][col] = true;
-
-        // Move in 4 directions
-        dfs(row + 1, col); // down
-        dfs(row - 1, col); // up
-        dfs(row, col + 1); // right
-        dfs(row, col - 1); // left
-    }
-
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
 
-        m = sc.nextInt();
-        n = sc.nextInt();
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
 
-        grid = new int[m][n];
-        visited = new boolean[m][n];
+        QuantityLength result = q1.add(q2);
 
-        // Input grid
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                grid[i][j] = sc.nextInt();
-            }
-        }
-
-        int islands = 0;
-
-        // Traverse grid
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-
-                if (grid[i][j] == 1 && !visited[i][j]) {
-                    islands++;
-                    dfs(i, j);
-                }
-            }
-        }
-
-        System.out.println(islands);
+        System.out.println(result);
     }
-
 }
