@@ -4,7 +4,7 @@ enum LengthUnit {
     FEET(1.0),
     INCHES(1.0 / 12.0),
     YARDS(3.0),
-    CENTIMETERS(0.0328084);
+    CENTIMETERS(1.0 / 30.48);
 
     private final double factor;
 
@@ -12,46 +12,83 @@ enum LengthUnit {
         this.factor = factor;
     }
 
-    public double toFeet(double value) {
+    public double getConversionFactor() {
+        return factor;
+    }
+
+    public double convertToBaseUnit(double value) {
         return value * factor;
     }
 
-    public double fromFeet(double feet) {
-        return feet / factor;
+    public double convertFromBaseUnit(double baseValue) {
+        return baseValue / factor;
     }
 }
 
 class QuantityLength {
-    double value;
-    LengthUnit unit;
+
+    private final double value;
+    private final LengthUnit unit;
+    private static final double EPSILON = 0.01;
 
     public QuantityLength(double value, LengthUnit unit) {
-        if (unit == null || !Double.isFinite(value)) {
+        if (unit == null || Double.isNaN(value) || Double.isInfinite(value)) {
             throw new IllegalArgumentException("Invalid input");
         }
+
         this.value = value;
         this.unit = unit;
     }
 
-    // UC6 - default first operand unit
+    public double getValue() {
+        return value;
+    }
+
+    public LengthUnit getUnit() {
+        return unit;
+    }
+
+    public QuantityLength convertTo(LengthUnit targetUnit) {
+        if (targetUnit == null) {
+            throw new IllegalArgumentException("Invalid target unit");
+        }
+
+        double base = unit.convertToBaseUnit(value);
+        double result = targetUnit.convertFromBaseUnit(base);
+
+        return new QuantityLength(result, targetUnit);
+    }
+
     public QuantityLength add(QuantityLength other) {
         return add(other, this.unit);
     }
 
-    // UC7 - explicit target unit
     public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
         if (other == null || targetUnit == null) {
             throw new IllegalArgumentException("Invalid input");
         }
 
-        double feet1 = this.unit.toFeet(this.value);
-        double feet2 = other.unit.toFeet(other.value);
+        double base1 = unit.convertToBaseUnit(value);
+        double base2 = other.unit.convertToBaseUnit(other.value);
 
-        double sumFeet = feet1 + feet2;
-
-        double result = targetUnit.fromFeet(sumFeet);
+        double sum = base1 + base2;
+        double result = targetUnit.convertFromBaseUnit(sum);
 
         return new QuantityLength(result, targetUnit);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof QuantityLength)) {
+            return false;
+        }
+
+        QuantityLength other = (QuantityLength) obj;
+
+        double base1 = unit.convertToBaseUnit(value);
+        double base2 = other.unit.convertToBaseUnit(other.value);
+
+        return Math.abs(base1 - base2) < EPSILON;
     }
 
     @Override
@@ -64,9 +101,15 @@ public class QualityMeasurementApp2 {
 
     public static void main(String[] args) {
 
-        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
+        QuantityLength q1 =
+                new QuantityLength(1.0, LengthUnit.FEET);
 
-        System.out.println(q1.add(q2, LengthUnit.YARDS));
+        QuantityLength q2 =
+                new QuantityLength(12.0, LengthUnit.INCHES);
+
+        QuantityLength result =
+                q1.add(q2, LengthUnit.YARDS);
+
+        System.out.println(result);
     }
 }
